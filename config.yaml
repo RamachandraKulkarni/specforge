@@ -1,0 +1,47 @@
+target:
+  base_url: ""        # set via the URL input in the dashboard — supports any URL format
+  auth:
+    type: "cookie"
+    login_url: ""     # Haiku auto-detects the login page — leave blank
+
+ai:
+  models:
+    decision: "claude-haiku-4-5-20251001"
+    analyzer:  "claude-sonnet-4-6"
+    assembler: "claude-opus-4-6"
+  concurrency:
+    haiku_parallel: 10
+    sonnet_parallel: 3
+  budget:
+    max_cost_usd: 15.0
+    warn_cost_usd: 10.0
+
+extraction:
+  screenshot:
+    width: 1920
+    height: 1080
+    format: "png"
+    max_size_kb: 500
+  crawl:
+    max_pages: 200
+    navigation_timeout_ms: 30000
+    interaction_delay_ms: 500
+    max_depth: 5
+  network:
+    capture: true
+    filter: ["xhr", "fetch"]
+    ignore_patterns: ["/static/", "/assets/", ".css", ".js", ".woff"]
+  grids:
+    frameworks: ["handsontable", "ag-grid", "datatables", "generic"]
+    max_sample_rows: 5
+
+output:
+  directory: "./output"
+  save_intermediate: true
+  save_screenshots: true
+  save_decision_logs: true
+  spec_schema_version: "2.0.0"
+
+pipeline:
+  checkpoint_interval: 10
+  resume_from_checkpoint: true
