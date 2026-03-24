@@ -1,5 +1,5 @@
-"""Re-export CostTracker from ai.anthropic_client for convenience."""
+"""Re-export CostTracker from ai.gemini_client for convenience."""
 
-from specforge.ai.anthropic_client import CostTracker
+from specforge.ai.gemini_client import CostTracker
 
 __all__ = ["CostTracker"]

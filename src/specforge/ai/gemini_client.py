@@ -1,11 +1,12 @@
-"""Unified Anthropic API client with concurrency control, retry, and cost tracking."""
-
+"""Unified Gemini API client with concurrency control, retry, and cost tracking."""
 import asyncio
 import datetime
 import json
 import re
 
-import anthropic
+import google.generativeai as genai
+from google.api_core.exceptions import ResourceExhausted, InternalServerError
+
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -13,18 +14,20 @@ from tenacity import (
     wait_exponential,
 )
 
-
 class BudgetExceededError(Exception):
     pass
 
+class UsageProxy:
+    def __init__(self, input_tokens, output_tokens):
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
 
 class CostTracker:
     """Track API costs across all model tiers."""
-
     PRICING = {
-        "claude-haiku-4-5-20251001": {"input": 0.80, "output": 4.00},
-        "claude-sonnet-4-6": {"input": 3.00, "output": 15.00},
-        "claude-opus-4-6": {"input": 15.00, "output": 75.00},
+        "gemini-2.5-flash": {"input": 0.075, "output": 0.30},
+        "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
+        "gemini-3.1-flash-lite-preview": {"input": 0.075, "output": 0.30},
     }
 
     def __init__(self):
@@ -32,7 +35,7 @@ class CostTracker:
         self.total: float = 0.0
 
     def record(self, model: str, usage):
-        pricing = self.PRICING.get(model, {"input": 3.00, "output": 15.00})
+        pricing = self.PRICING.get(model, {"input": 0.075, "output": 0.30})
         cost = (
             usage.input_tokens * pricing["input"]
             + usage.output_tokens * pricing["output"]
@@ -53,9 +56,9 @@ class CostTracker:
         by_tier = {"decisions": 0.0, "analysis": 0.0, "assembly": 0.0}
         for r in self.records:
             by_model[r["model"]] = by_model.get(r["model"], 0.0) + r["cost_usd"]
-            if "haiku" in r["model"]:
+            if "flash" in r["model"]:
                 by_tier["decisions"] += r["cost_usd"]
-            elif "sonnet" in r["model"]:
+            elif "pro" in r["model"]:
                 by_tier["analysis"] += r["cost_usd"]
             else:
                 by_tier["assembly"] += r["cost_usd"]
@@ -68,34 +71,28 @@ class CostTracker:
             "total_output_tokens": sum(r["output_tokens"] for r in self.records),
         }
 
-
-class AnthropicClient:
-    """Unified API client for all Anthropic model calls."""
+class GeminiClient:
+    """Unified API client for all Gemini model calls."""
 
     def __init__(self, api_key: str, config: dict):
-        # Explicitly set base_url to avoid ANTHROPIC_BASE_URL env var overrides
-        self.client = anthropic.AsyncAnthropic(
-            api_key=api_key,
-            base_url="https://api.anthropic.com",
-        )
+        genai.configure(api_key=api_key)
         self.config = config
         self.cost_tracker = CostTracker()
 
         self.semaphores: dict[str, asyncio.Semaphore] = {
-            "claude-haiku-4-5-20251001": asyncio.Semaphore(
-                config.get("haiku_parallel", 10)
+            "gemini-2.5-flash": asyncio.Semaphore(
+                config.get("flash_parallel", 10)
             ),
-            "claude-sonnet-4-6": asyncio.Semaphore(
-                config.get("sonnet_parallel", 3)
+            "gemini-2.5-pro": asyncio.Semaphore(
+                config.get("pro_parallel", 3)
             ),
-            "claude-opus-4-6": asyncio.Semaphore(1),
         }
 
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=30),
         retry=retry_if_exception_type(
-            (anthropic.RateLimitError, anthropic.InternalServerError)
+            (ResourceExhausted, InternalServerError)
         ),
     )
     async def call(
@@ -103,7 +100,7 @@ class AnthropicClient:
         model: str,
         system: str,
         user_content,
-        max_tokens: int = 4096,
+        max_tokens: int = 8192,
         temperature: float = 0.1,
     ) -> dict:
         """Make an API call with concurrency control and cost tracking."""
@@ -113,22 +110,27 @@ class AnthropicClient:
                 f"Cost ${self.cost_tracker.total:.2f} exceeds limit ${max_cost}"
             )
 
-        if isinstance(user_content, str):
-            messages = [{"role": "user", "content": user_content}]
-        else:
-            messages = [{"role": "user", "content": user_content}]
-
+        generative_model = genai.GenerativeModel(
+            model_name=model,
+            system_instruction=system
+        )
+        
         sem = self.semaphores.get(model, asyncio.Semaphore(1))
         async with sem:
-            response = await self.client.messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=system,
-                messages=messages,
+            # We must use content wrapper 
+            response = await generative_model.generate_content_async(
+                contents=user_content,
+                generation_config=genai.GenerationConfig(
+                    max_output_tokens=max_tokens,
+                    temperature=temperature,
+                )
             )
 
-        self.cost_tracker.record(model, response.usage)
+        usage = UsageProxy(
+            input_tokens=response.usage_metadata.prompt_token_count,
+            output_tokens=response.usage_metadata.candidates_token_count
+        )
+        self.cost_tracker.record(model, usage)
 
         warn_cost = self.config.get("warn_cost_usd", 10.0)
         if self.cost_tracker.total >= warn_cost:
@@ -139,7 +141,7 @@ class AnthropicClient:
                 threshold=warn_cost,
             )
 
-        return self._parse(response)
+        return self._parse(response.text, model, usage)
 
     async def call_with_vision(
         self,
@@ -147,41 +149,29 @@ class AnthropicClient:
         system: str,
         text: str,
         images: list[dict],
-        max_tokens: int = 4096,
+        max_tokens: int = 8192,
         temperature: float = 0.1,
     ) -> dict:
         """Vision-enabled API call."""
         content = []
         for img in images:
-            content.append(
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": img.get("media_type", "image/png"),
-                        "data": img["base64"],
-                    },
-                }
-            )
-        content.append({"type": "text", "text": text})
+            content.append({
+                "mime_type": img.get("media_type", "image/png"),
+                "data": img["base64"]
+            })
+        content.append(text)
         return await self.call(model, system, content, max_tokens, temperature)
 
     async def haiku(self, system: str, content, **kwargs) -> dict:
-        return await self.call("claude-haiku-4-5-20251001", system, content, **kwargs)
+        return await self.call("gemini-2.5-flash", system, content, **kwargs)
 
     async def sonnet(self, system: str, content, **kwargs) -> dict:
-        return await self.call("claude-sonnet-4-6", system, content, **kwargs)
+        return await self.call("gemini-2.5-pro", system, content, **kwargs)
 
     async def opus(self, system: str, content, **kwargs) -> dict:
-        return await self.call(
-            "claude-opus-4-6", system, content, max_tokens=16384, **kwargs
-        )
+        return await self.call("gemini-2.5-pro", system, content, **kwargs)
 
-    def _parse(self, response) -> dict:
-        text = "".join(
-            block.text for block in response.content if block.type == "text"
-        )
-
+    def _parse(self, text: str, model: str, usage: UsageProxy) -> dict:
         parsed = None
         try:
             json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
@@ -196,8 +186,8 @@ class AnthropicClient:
             "raw": text,
             "parsed": parsed,
             "usage": {
-                "input_tokens": response.usage.input_tokens,
-                "output_tokens": response.usage.output_tokens,
+                "input_tokens": usage.input_tokens,
+                "output_tokens": usage.output_tokens,
             },
-            "model": response.model,
+            "model": model,
         }

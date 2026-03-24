@@ -6,12 +6,12 @@ target:
 
 ai:
   models:
-    decision: "claude-haiku-4-5-20251001"
-    analyzer:  "claude-sonnet-4-6"
-    assembler: "claude-opus-4-6"
+    decision: "gemini-2.5-flash"
+    analyzer:  "gemini-2.5-pro"
+    assembler: "gemini-2.5-pro"
   concurrency:
-    haiku_parallel: 10
-    sonnet_parallel: 3
+    flash_parallel: 10
+    pro_parallel: 3
   budget:
     max_cost_usd: 15.0
     warn_cost_usd: 10.0

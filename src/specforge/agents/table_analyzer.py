@@ -2,7 +2,7 @@
 
 import asyncio
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 from specforge.ai.image_utils import screenshot_bytes_to_vision
 from specforge.ai.prompt_manager import PromptManager
 from specforge.decisions.ambiguity_resolver import AmbiguityResolver
@@ -21,7 +21,7 @@ class TableAnalyzer:
 
     def __init__(
         self,
-        ai: AnthropicClient,
+        ai: GeminiClient,
         prompt_manager: PromptManager,
         config: dict,
     ):
@@ -68,7 +68,7 @@ class TableAnalyzer:
         if screenshot_bytes:
             img = screenshot_bytes_to_vision(screenshot_bytes)
             result = await self.ai.call_with_vision(
-                "claude-haiku-4-5-20251001", self.SYSTEM_PROMPT, prompt, [img], max_tokens=2000
+                "gemini-3.1-flash-lite-preview", self.SYSTEM_PROMPT, prompt, [img], max_tokens=2000
             )
         else:
             result = await self.ai.haiku(self.SYSTEM_PROMPT, prompt, max_tokens=2000)

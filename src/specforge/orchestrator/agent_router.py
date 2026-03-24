@@ -1,6 +1,6 @@
 """Routes tasks to the appropriate model tier based on task type and complexity."""
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 
 
 class AgentRouter:
@@ -23,7 +23,7 @@ class AgentRouter:
         "spec_assembly": "opus",
     }
 
-    def __init__(self, ai: AnthropicClient):
+    def __init__(self, ai: GeminiClient):
         self.ai = ai
 
     def get_tier(self, task_type: str) -> str:

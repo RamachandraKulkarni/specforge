@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="linear-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpecForge v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ─────────────────────────────────────────────
+       DESIGN TOKENS — 4 themes (ui-ux-pro-max §4,6)
+       linear-dark | linear-light | claude-dark | claude-light
+    ───────────────────────────────────────────── */
+
+    [data-theme="linear-dark"] {
+      --bg:            #09090b;   /* zinc-950 */
+      --surface:       #18181b;   /* zinc-900 */
+      --elevated:      #27272a;   /* zinc-800 — hover bg */
+      --border:        #27272a;   /* zinc-800 */
+      --border-subtle: #1f1f22;
+      --border-focus:  #6366f1;
+      --accent:        #6366f1;   /* indigo-500 */
+      --accent-hover:  #818cf8;   /* indigo-400 */
+      --accent-bg:     rgba(99,102,241,.12);
+      --text:          #f4f4f5;   /* zinc-100 */
+      --text-2:        #a1a1aa;   /* zinc-400 */
+      --text-3:        #52525b;   /* zinc-600 */
+      --input-bg:      #18181b;
+      --kbd:           #27272a;
+      --swatch-bg:     #09090b; --swatch-s: #18181b; --swatch-a: #6366f1;
+    }
+
+    [data-theme="linear-light"] {
+      --bg:            #ffffff;
+      --surface:       #fafafa;
+      --elevated:      #f4f4f5;
+      --border:        #e4e4e7;   /* zinc-200 */
+      --border-subtle: #f0f0f2;
+      --border-focus:  #6366f1;
+      --accent:        #6366f1;
+      --accent-hover:  #4f46e5;   /* indigo-600 */
+      --accent-bg:     rgba(99,102,241,.08);
+      --text:          #09090b;
+      --text-2:        #71717a;   /* zinc-500 */
+      --text-3:        #a1a1aa;   /* zinc-400 */
+      --input-bg:      #ffffff;
+      --kbd:           #f4f4f5;
+      --swatch-bg:     #fff; --swatch-s: #f4f4f5; --swatch-a: #6366f1;
+    }
+
+    [data-theme="claude-dark"] {
+      --bg:            #1c1917;   /* stone-900 */
+      --surface:       #292524;   /* stone-800 */
+      --elevated:      #3c3735;
+      --border:        #3c3735;
+      --border-subtle: #28231f;
+      --border-focus:  #f59e0b;
+      --accent:        #f59e0b;   /* amber-500 */
+      --accent-hover:  #fbbf24;   /* amber-400 */
+      --accent-bg:     rgba(245,158,11,.12);
+      --text:          #fafaf9;   /* stone-50 */
+      --text-2:        #a8a29e;   /* stone-400 */
+      --text-3:        #57534e;   /* stone-600 */
+      --input-bg:      #1c1917;
+      --kbd:           #3c3735;
+      --swatch-bg:     #1c1917; --swatch-s: #292524; --swatch-a: #f59e0b;
+    }
+
+    [data-theme="claude-light"] {
+      --bg:            #faf9f7;   /* stone-50 */
+      --surface:       #f5f3f0;
+      --elevated:      #ede9e4;
+      --border:        #e7e5e4;   /* stone-200 */
+      --border-subtle: #f0edea;
+      --border-focus:  #d97706;
+      --accent:        #d97706;   /* amber-600 */
+      --accent-hover:  #b45309;
+      --accent-bg:     rgba(217,119,6,.1);
+      --text:          #1c1917;
+      --text-2:        #57534e;   /* stone-600 */
+      --text-3:        #a8a29e;   /* stone-400 */
+      --input-bg:      #faf9f7;
+      --kbd:           #ede9e4;
+      --swatch-bg:     #faf9f7; --swatch-s: #f5f3f0; --swatch-a: #d97706;
+    }
+
+    /* Shared semantic tokens (theme-independent) */
+    :root {
+      --success:   #22c55e;
+      --success-bg: rgba(34,197,94,.1);
+      --warn:      #f59e0b;
+      --warn-bg:   rgba(245,158,11,.1);
+      --danger:    #ef4444;
+      --danger-bg: rgba(239,68,68,.1);
+      --haiku:     #a78bfa;   /* violet-400 */
+      --sonnet:    #34d399;   /* emerald-400 */
+      --opus:      #fb923c;   /* orange-400 */
+      --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+      --sans:      'Inter', system-ui, -apple-system, sans-serif;
+      --r-sm:      5px;
+      --r:         8px;
+      --r-lg:      10px;
+      /* shadow only on floating elements (menus, tooltips) */
+      --shadow-float: 0 4px 20px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.03);
+      /* z-index scale */
+      --z-base:    0;
+      --z-raised:  10;
+      --z-overlay: 100;
+      --z-menu:    200;
+      --z-toast:   300;
+    }
+
+    /* ─────────────────────────────────────────────
+       RESET  (ui-ux-pro-max §5)
+    ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 1.5;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      transition: background .2s, color .2s;
+    }
+    a { color: var(--accent); text-decoration: none; }
+
+    /* Focus ring — §1 accessibility */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--elevated); border-radius: 4px; }
+
+    /* ─────────────────────────────────────────────
+       APP GRID  (ui-ux-pro-max §5)
+    ───────────────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-rows: 48px 1fr;
+      grid-template-columns: 240px 1fr 280px;
+      grid-template-areas: "hdr hdr hdr" "left main right";
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ─────────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────────── */
+    .hdr {
+      grid-area: hdr;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px 0 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: var(--z-overlay);
+    }
+
+    /* Logo */
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; letter-spacing: -.015em;
+      color: var(--text); white-space: nowrap; flex-shrink: 0;
+      user-select: none;
+    }
+    .logo-mark {
+      width: 24px; height: 24px; border-radius: 6px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+    .logo-mark svg { color: #fff; }
+    .logo-sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
+
+    /* URL input bar — hero element (like git-context) */
+    .url-wrap {
+      flex: 1;
+      display: flex; align-items: center; gap: 6px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 0 10px;
+      height: 34px;
+      transition: border-color .15s;
+      min-width: 0;
+    }
+    .url-wrap:focus-within { border-color: var(--border-focus); }
+    .url-wrap.valid   { border-color: rgba(34,197,94,.5); }
+    .url-wrap.invalid { border-color: rgba(239,68,68,.4); }
+
+    .url-icon { color: var(--text-3); flex-shrink: 0; display: flex; }
+    .url-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-size: 12.5px; color: var(--text); font-family: var(--mono);
+      min-width: 0;
+    }
+    .url-input::placeholder { color: var(--text-3); font-family: var(--sans); font-size: 13px; }
+    .url-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border); flex-shrink: 0;
+      transition: background .15s;
+    }
+    .url-dot.v { background: var(--success); }
+    .url-dot.e { background: var(--danger); }
+
+    .btn-attach {
+      flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+      padding: 0 10px; height: 26px;
+      font-size: 11.5px; font-weight: 500;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      background: transparent;
+      cursor: pointer;
+      transition: color .15s, border-color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .btn-attach:hover { color: var(--text); border-color: var(--border-focus); background: var(--accent-bg); }
+    .btn-attach.on { color: var(--success); border-color: rgba(34,197,94,.4); background: var(--success-bg); }
+
+    /* Header right cluster */
+    .hdr-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    /* Status pill */
+    .status-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 0 9px; height: 26px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
+      white-space: nowrap;
+      transition: color .2s, border-color .2s;
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-3);
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+    .status-pill.running  { color: var(--accent); border-color: rgba(99,102,241,.35); }
+    .status-pill.running  .status-dot { background: var(--accent); animation: blink 1.4s ease-in-out infinite; }
+    .status-pill.complete { color: var(--success); border-color: rgba(34,197,94,.35); }
+    .status-pill.complete .status-dot { background: var(--success); }
+    .status-pill.error    { color: var(--danger); border-color: rgba(239,68,68,.35); }
+    .status-pill.error    .status-dot { background: var(--danger); }
+    .status-pill.stopping { color: var(--warn); border-color: rgba(245,158,11,.35); }
+    .status-pill.stopping .status-dot { background: var(--warn); animation: blink .9s linear infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* Icon button (theme selector, etc.) */
+    .icon-btn {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-3);
+      cursor: pointer;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border-focus); background: var(--elevated); }
+
+    /* ─────────────────────────────────────────────
+       THEME MENU  (floating, §7 animation rules)
+    ───────────────────────────────────────────── */
+    .theme-menu {
+      position: fixed; z-index: var(--z-menu);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 6px;
+      box-shadow: var(--shadow-float);
+      display: none; flex-direction: column; gap: 2px;
+      min-width: 176px;
+    }
+    .theme-menu.open { display: flex; }
+    .theme-opt {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 9px; border-radius: var(--r-sm);
+      cursor: pointer;
+      transition: background .12s;
+      user-select: none;
+    }
+    .theme-opt:hover { background: var(--elevated); }
+    .theme-opt.active { background: var(--accent-bg); }
+    .swatch {
+      display: flex; gap: 2px; flex-shrink: 0;
+    }
+    .sw { width: 12px; height: 12px; border-radius: 3px; }
+    .theme-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+    .theme-mode { font-size: 11px; color: var(--text-3); }
+    .theme-tick { font-size: 11px; color: var(--accent); }
+
+    /* ─────────────────────────────────────────────
+       LEFT PANEL
+    ───────────────────────────────────────────── */
+    .left {
+      grid-area: left;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-section {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .panel-section:last-child { border-bottom: none; flex: 1; }
+    .section-title {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .07em;
+      color: var(--text-3);
+      margin-bottom: 8px;
+    }
+
+    /* Config rows */
+    .cfg-row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 4px 0;
+    }
+    .cfg-key { font-size: 12px; color: var(--text-2); }
+    .cfg-val {
+      font-size: 11.5px; font-family: var(--mono); color: var(--accent);
+      max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      text-align: right;
+    }
+
+    /* Endpoint rows */
+    .ep-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 3px 0;
+    }
+    .ep-method {
+      font-size: 10.5px; font-weight: 600; font-family: var(--mono);
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .ep-method.get  { color: var(--success); background: var(--success-bg); }
+    .ep-method.post { color: var(--accent); background: var(--accent-bg); }
+    .ep-method.sse  { color: var(--warn); background: var(--warn-bg); }
+    .ep-path { font-size: 11px; font-family: var(--mono); color: var(--text-3); }
+
+    /* Session stats */
+    .stat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 3px 0;
+    }
+    .stat-key { font-size: 12px; color: var(--text-2); }
+    .stat-val { font-size: 12px; font-family: var(--mono); color: var(--text); font-weight: 500; }
+
+    /* Shimmer skeleton */
+    .shimmer {
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--surface) 25%, var(--elevated) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s infinite;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ─────────────────────────────────────────────
+       MAIN PANEL
+    ───────────────────────────────────────────── */
+    .main {
+      grid-area: main;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* ─────────────────────────────────────────────
+       PIPELINE CONTROL BAR
+    ───────────────────────────────────────────── */
+    .ctrl-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface);
+    }
+    .ctrl-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+    .ctrl-cost-wrap { display: flex; flex-direction: column; gap: 1px; min-width: 70px; }
+    .ctrl-cost-label { font-size: 10px; color: var(--text-3); }
+    .ctrl-cost {
+      font-size: 14px; font-weight: 600; font-family: var(--mono);
+      color: var(--text); letter-spacing: -.02em;
+    }
+    .budget-bar-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .budget-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-3); }
+    .budget-track { height: 3px; background: var(--elevated); border-radius: 2px; overflow: hidden; }
+    .budget-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width .5s ease; }
+
+    /* Primary button */
+    .btn-run {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 16px; height: 34px;
+      font-size: 13px; font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: 1px solid transparent;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: opacity .15s, background .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-run:hover:not(:disabled) { opacity: .9; }
+    .btn-run:active:not(:disabled) { opacity: .8; }
+    .btn-run:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Destructive button */
+    .btn-stop {
+      display: flex; align-items: center; gap: 5px;
+      padding: 0 13px; height: 34px;
+      font-size: 12.5px; font-weight: 500;
+      color: var(--danger);
+      background: var(--danger-bg);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-stop:hover:not(:disabled) { border-color: rgba(239,68,68,.5); background: rgba(239,68,68,.15); }
+    .btn-stop:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* ─────────────────────────────────────────────
+       SECTION CARD (generic container)
+    ───────────────────────────────────────────── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .card-title {
+      font-size: 11.5px; font-weight: 600;
+      color: var(--text);
+    }
+    .card-action {
+      font-size: 11px; color: var(--text-3);
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 4px;
+      cursor: pointer;
+      transition: color .12s, border-color .12s;
+    }
+    .card-action:hover { color: var(--text-2); border-color: var(--border-focus); }
+    .card-body { padding: 12px 14px; }
+    .card-body-flush { padding: 0; }
+
+    /* ─────────────────────────────────────────────
+       PHASE TIMELINE  (§10 data viz rules)
+    ───────────────────────────────────────────── */
+    .phase-list { display: flex; flex-direction: column; }
+    .phase-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background .12s;
+    }
+    .phase-row:last-child { border-bottom: none; }
+    .phase-row:hover { background: var(--elevated); }
+    .phase-row.active { background: var(--accent-bg); }
+
+    .phase-indicator {
+      width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .pi-pending {
+      width: 8px; height: 8px; border-radius: 50%;
+      border: 1.5px solid var(--text-3);
+    }
+    .pi-running {
+      width: 14px; height: 14px;
+    }
+    .pi-done {
+      color: var(--success);
+    }
+    .pi-error { color: var(--danger); }
+
+    /* Spinning ring */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+
+    .phase-name {
+      font-size: 13px; font-weight: 500; color: var(--text-2);
+      flex: 1;
+    }
+    .phase-row.done  .phase-name { color: var(--text); }
+    .phase-row.active .phase-name { color: var(--text); }
+
+    .phase-count {
+      font-size: 11px; font-family: var(--mono);
+      color: var(--success);
+      background: var(--success-bg);
+      padding: 1px 6px; border-radius: 3px;
+    }
+    .phase-running-label {
+      font-size: 11px; color: var(--accent);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    /* ─────────────────────────────────────────────
+       EVENT LOG
+    ───────────────────────────────────────────── */
+    .event-log {
+      font-family: var(--mono);
+      font-size: 11.5px; line-height: 1.65;
+      color: var(--text-2);
+      max-height: 200px; overflow-y: auto;
+      padding: 10px;
+      background: var(--bg);
+      border-top: 1px solid var(--border-subtle);
+    }
+    .el-line { display: flex; gap: 8px; }
+    .el-ts { color: var(--text-3); flex-shrink: 0; }
+    .el-type { flex-shrink: 0; font-weight: 500; }
+    .el-type.phase_start      { color: var(--accent); }
+    .el-type.phase_complete   { color: var(--success); }
+    .el-type.screen_found     { color: var(--haiku); }
+    .el-type.duplicate_skip   { color: var(--text-3); }
+    .el-type.budget_exceeded  { color: var(--danger); }
+    .el-type.error            { color: var(--danger); }
+    .el-type.complete         { color: var(--success); }
+    .el-msg { color: var(--text-2); word-break: break-all; }
+
+    /* ─────────────────────────────────────────────
+       RUNS TABLE  (§10 sortable-table, number-formatting)
+    ───────────────────────────────────────────── */
+    .runs-tbl { width: 100%; border-collapse: collapse; }
+    .runs-tbl th {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--text-3);
+      text-align: left; padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .runs-tbl td {
+      padding: 8px 14px; font-size: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-2);
+    }
+    .runs-tbl tr:last-child td { border-bottom: none; }
+    .runs-tbl tbody tr:hover td { background: var(--elevated); }
+    .runs-tbl .mono { font-family: var(--mono); font-size: 11.5px; color: var(--text); }
+
+    .chip {
+      display: inline-flex; align-items: center;
+      padding: 1px 6px; border-radius: 3px;
+      font-size: 10.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .chip-spec { background: var(--accent-bg); color: var(--accent); }
+    .chip-none { background: var(--elevated); color: var(--text-3); }
+
+    .btn-dl {
+      font-size: 11px; padding: 3px 9px;
+      color: var(--accent);
+      background: var(--accent-bg);
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 4px; cursor: pointer;
+      transition: border-color .12s;
+    }
+    .btn-dl:hover { border-color: var(--accent); }
+
+    .empty {
+      text-align: center; padding: 28px 16px;
+      color: var(--text-3); font-size: 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .empty svg { opacity: .3; }
+
+    /* ─────────────────────────────────────────────
+       RIGHT PANEL
+    ───────────────────────────────────────────── */
+    .right {
+      grid-area: right;
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .right-section {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    /* Cost breakdown */
+    .cost-total {
+      font-size: 22px; font-weight: 600;
+      font-family: var(--mono);
+      color: var(--text); letter-spacing: -.03em;
+      margin-bottom: 2px;
+    }
+    .cost-sub { font-size: 11px; color: var(--text-3); margin-bottom: 12px; }
+
+    .tier-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+    .tier-header { display: flex; align-items: center; justify-content: space-between; }
+    .tier-label { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-2); }
+    .tier-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .tier-amount { font-size: 11.5px; font-family: var(--mono); color: var(--text); font-weight: 500; }
+    .tier-track { height: 2px; background: var(--elevated); border-radius: 2px; overflow: hidden; }
+    .tier-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+
+    .budget-meta {
+      display: flex; justify-content: space-between;
+      font-size: 10.5px; color: var(--text-3); font-family: var(--mono);
+      padding-top: 8px; margin-top: 4px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* Live Preview */
+    .preview-section {
+      flex: 1;
+      display: flex; flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .preview-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .preview-title { font-size: 11.5px; font-weight: 600; color: var(--text); }
+    .preview-status { font-size: 11px; color: var(--text-3); }
+
+    .preview-toolbar {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .preview-domain {
+      flex: 1; font-size: 11px; font-family: var(--mono);
+      color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .preview-action {
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-3); cursor: pointer;
+      transition: color .12s, border-color .12s;
+      flex-shrink: 0;
+    }
+    .preview-action:hover { color: var(--text); border-color: var(--border-focus); }
+
+    .preview-empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; padding: 20px; text-align: center;
+    }
+    .preview-empty-state svg { opacity: .2; color: var(--text-3); }
+    .preview-empty-state p { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+    .preview-empty-state strong { color: var(--text-2); }
+
+    .preview-frame-wrap {
+      flex: 1; position: relative; min-height: 0;
+    }
+    .preview-iframe { width: 100%; height: 100%; border: none; display: block; background: var(--bg); }
+    .preview-blocked {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; padding: 20px; text-align: center;
+      background: var(--surface);
+    }
+    .preview-blocked p { font-size: 11.5px; color: var(--text-3); line-height: 1.5; max-width: 200px; }
+    .preview-blocked strong { font-size: 12.5px; color: var(--text); display: block; margin-bottom: 4px; }
+    .btn-open-tab {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 14px; font-size: 12px; font-weight: 500;
+      color: #fff; background: var(--accent); border: none;
+      border-radius: var(--r); cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-open-tab:hover { opacity: .85; }
+
+    /* ─────────────────────────────────────────────
+       RESPONSIVE  (§5 breakpoints)
+    ───────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 200px 1fr;
+        grid-template-areas: "hdr hdr" "left main";
+        height: auto; overflow: auto;
+      }
+      body { overflow: auto; }
+      .right { display: none; }
+    }
+    @media (max-width: 640px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-areas: "hdr" "main" "left";
+      }
+      .left { border-right: none; border-top: 1px solid var(--border); }
+    }
+
+    /* ─────────────────────────────────────────────
+       REDUCED MOTION  (§7 accessibility)
+    ───────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ══════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════ -->
+  <header class="hdr" role="banner">
+
+    <!-- Logo -->
+    <div class="logo" aria-label="SpecForge v2">
+      <div class="logo-mark" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2L14 5.5V10.5L8 14L2 10.5V5.5L8 2Z" fill="white" opacity=".9"/>
+          <circle cx="8" cy="8" r="2" fill="rgba(0,0,0,.4)"/>
+        </svg>
+      </div>
+      SpecForge
+      <span style="color:var(--text-3);font-weight:400">v2</span>
+    </div>
+
+    <div class="logo-sep" aria-hidden="true"></div>
+
+    <!-- URL input — primary hero element -->
+    <div class="url-wrap" id="urlWrap" role="search">
+      <span class="url-icon" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      </span>
+      <input
+        id="urlInput"
+        class="url-input"
+        type="url"
+        placeholder="https://target-app.com — URL to crawl"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Target URL to crawl"
+        oninput="onUrlInput()"
+      />
+      <span class="url-dot" id="urlDot" aria-hidden="true"></span>
+      <button
+        id="btnAttach"
+        class="btn-attach"
+        onclick="togglePreview()"
+        aria-label="Attach live preview"
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        Preview
+      </button>
+    </div>
+
+    <!-- Right controls -->
+    <div class="hdr-right">
+      <div class="status-pill idle" id="statusPill" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="statusText">idle</span>
+      </div>
+
+      <button
+        class="icon-btn"
+        id="btnTheme"
+        onclick="openThemeMenu()"
+        aria-label="Switch theme"
+        aria-haspopup="true"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      </button>
+    </div>
+
+  </header>
+
+  <!-- ══════════════════════════════════════════
+       THEME MENU (floating portal)
+  ══════════════════════════════════════════ -->
+  <div class="theme-menu" id="themeMenu" role="menu" aria-label="Theme options">
+    <!-- linear-dark -->
+    <div class="theme-opt active" data-t="linear-dark" role="menuitem" onclick="setTheme('linear-dark')" tabindex="0">
+      <div class="swatch" aria-hidden="true">
+        <div class="sw" style="background:#09090b;border:1px solid #27272a"></div>
+        <div class="sw" style="background:#18181b"></div>
+        <div class="sw" style="background:#6366f1"></div>
+      </div>
+      <span class="theme-name">Linear</span>
+      <span class="theme-mode">Dark</span>
+      <span class="theme-tick" id="tick-linear-dark">✓</span>
+    </div>
+    <!-- linear-light -->
+    <div class="theme-opt" data-t="linear-light" role="menuitem" onclick="setTheme('linear-light')" tabindex="0">
+      <div class="swatch" aria-hidden="true">
+        <div class="sw" style="background:#fff;border:1px solid #e4e4e7"></div>
+        <div class="sw" style="background:#f4f4f5"></div>
+        <div class="sw" style="background:#6366f1"></div>
+      </div>
+      <span class="theme-name">Linear</span>
+      <span class="theme-mode">Light</span>
+      <span class="theme-tick" id="tick-linear-light" style="visibility:hidden">✓</span>
+    </div>
+    <!-- claude-dark -->
+    <div class="theme-opt" data-t="claude-dark" role="menuitem" onclick="setTheme('claude-dark')" tabindex="0">
+      <div class="swatch" aria-hidden="true">
+        <div class="sw" style="background:#1c1917;border:1px solid #3c3735"></div>
+        <div class="sw" style="background:#292524"></div>
+        <div class="sw" style="background:#f59e0b"></div>
+      </div>
+      <span class="theme-name">Claude</span>
+      <span class="theme-mode">Dark</span>
+      <span class="theme-tick" id="tick-claude-dark" style="visibility:hidden">✓</span>
+    </div>
+    <!-- claude-light -->
+    <div class="theme-opt" data-t="claude-light" role="menuitem" onclick="setTheme('claude-light')" tabindex="0">
+      <div class="swatch" aria-hidden="true">
+        <div class="sw" style="background:#faf9f7;border:1px solid #e7e5e4"></div>
+        <div class="sw" style="background:#f5f3f0"></div>
+        <div class="sw" style="background:#d97706"></div>
+      </div>
+      <span class="theme-name">Claude</span>
+      <span class="theme-mode">Light</span>
+      <span class="theme-tick" id="tick-claude-light" style="visibility:hidden">✓</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       LEFT PANEL — config + endpoints + session
+  ══════════════════════════════════════════ -->
+  <aside class="left" aria-label="Configuration">
+
+    <!-- Target config -->
+    <div class="panel-section">
+      <div class="section-title">Target Config</div>
+      <div id="cfgPanel">
+        <div class="shimmer" style="height:11px;width:80%;margin-bottom:7px"></div>
+        <div class="shimmer" style="height:11px;width:60%;margin-bottom:7px"></div>
+        <div class="shimmer" style="height:11px;width:72%"></div>
+      </div>
+    </div>
+
+    <!-- Session stats -->
+    <div class="panel-section">
+      <div class="section-title">Session</div>
+      <div class="stat-row"><span class="stat-key">Screens</span><span class="stat-val" id="sScreens">—</span></div>
+      <div class="stat-row"><span class="stat-key">Tables</span><span class="stat-val" id="sTables">—</span></div>
+      <div class="stat-row"><span class="stat-key">Interactions</span><span class="stat-val" id="sInteract">—</span></div>
+      <div class="stat-row"><span class="stat-key">Elapsed</span><span class="stat-val" id="sElapsed">—</span></div>
+    </div>
+
+    <!-- API endpoints -->
+    <div class="panel-section">
+      <div class="section-title">Endpoints</div>
+      <div class="ep-row">
+        <span class="ep-method get">GET</span>
+        <span class="ep-path">/api/config</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-method post">POST</span>
+        <span class="ep-path">/api/pipeline/start</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-method post">POST</span>
+        <span class="ep-path">/api/pipeline/stop</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-method sse">SSE</span>
+        <span class="ep-path">/api/pipeline/progress</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-method get">GET</span>
+        <span class="ep-path">/api/runs</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-method get">GET</span>
+        <span class="ep-path">/api/costs</span>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══════════════════════════════════════════
+       MAIN — pipeline + phases + log + runs
+  ══════════════════════════════════════════ -->
+  <main class="main" id="mainArea" aria-label="Pipeline control">
+
+    <!-- Control bar -->
+    <div class="ctrl-bar">
+      <button
+        class="btn-run"
+        id="btnRun"
+        onclick="startPipeline()"
+        aria-label="Run pipeline"
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M5 3l14 9L5 21V3z"/>
+        </svg>
+        Run Pipeline
+      </button>
+
+      <button
+        class="btn-stop"
+        id="btnStop"
+        onclick="stopPipeline()"
+        disabled
+        aria-label="Stop pipeline"
+      >
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+        </svg>
+        Stop
+      </button>
+
+      <div class="ctrl-divider" aria-hidden="true"></div>
+
+      <div class="ctrl-cost-wrap">
+        <div class="ctrl-cost-label">Live cost</div>
+        <div class="ctrl-cost" id="liveCost" aria-live="polite">$0.0000</div>
+      </div>
+
+      <div class="ctrl-divider" aria-hidden="true"></div>
+
+      <div class="budget-bar-wrap">
+        <div class="budget-bar-labels">
+          <span>Budget</span>
+          <span id="budgetPctLabel">0% of <span id="budgetLimitLabel">$15</span></span>
+        </div>
+        <div class="budget-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="budgetBar">
+          <div class="budget-fill" id="budgetFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase timeline -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Pipeline Phases</span>
+        <span style="font-size:11px;color:var(--text-3);font-family:var(--mono)" id="phaseTimer"></span>
+      </div>
+      <div class="phase-list" id="phaseList" role="list" aria-label="Pipeline phases">
+        <!-- rendered by JS -->
+      </div>
+      <!-- Event log lives in the same card, below phases -->
+      <div class="event-log" id="eventLog" aria-live="polite" aria-label="Pipeline event log">
+        <div class="el-line">
+          <span class="el-ts">--:--:--</span>
+          <span class="el-msg" style="color:var(--text-3)">Waiting for pipeline…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Run history -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Run History</span>
+        <button class="card-action" onclick="loadRuns()" aria-label="Refresh runs">
+          ↻ Refresh
+        </button>
+      </div>
+      <div class="card-body-flush" id="runsContainer">
+        <div class="empty">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>No runs yet — start the pipeline to generate a spec</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       RIGHT PANEL — cost + live preview
+  ══════════════════════════════════════════ -->
+  <aside class="right" aria-label="Cost and preview">
+
+    <!-- Cost breakdown -->
+    <div class="right-section">
+      <div class="section-title">Cost Breakdown</div>
+      <div class="cost-total" id="costTotal">$0.0000</div>
+      <div class="cost-sub">total this session</div>
+
+      <!-- Haiku -->
+      <div class="tier-row">
+        <div class="tier-header">
+          <span class="tier-label">
+            <span class="tier-dot" style="background:var(--haiku)"></span>
+            Haiku · decisions
+          </span>
+          <span class="tier-amount" id="cHaiku">$0.0000</span>
+        </div>
+        <div class="tier-track"><div class="tier-fill" id="bHaiku" style="width:0%;background:var(--haiku)"></div></div>
+      </div>
+      <!-- Sonnet -->
+      <div class="tier-row">
+        <div class="tier-header">
+          <span class="tier-label">
+            <span class="tier-dot" style="background:var(--sonnet)"></span>
+            Sonnet · analysis
+          </span>
+          <span class="tier-amount" id="cSonnet">$0.0000</span>
+        </div>
+        <div class="tier-track"><div class="tier-fill" id="bSonnet" style="width:0%;background:var(--sonnet)"></div></div>
+      </div>
+      <!-- Opus -->
+      <div class="tier-row">
+        <div class="tier-header">
+          <span class="tier-label">
+            <span class="tier-dot" style="background:var(--opus)"></span>
+            Opus · assembly
+          </span>
+          <span class="tier-amount" id="cOpus">$0.0000</span>
+        </div>
+        <div class="tier-track"><div class="tier-fill" id="bOpus" style="width:0%;background:var(--opus)"></div></div>
+      </div>
+
+      <div class="budget-meta">
+        <span>limit: <strong style="color:var(--text-2)" id="costBudgetLimit">$15.00</strong></span>
+        <span id="costBudgetPct" aria-live="polite">0%</span>
+      </div>
+    </div>
+
+    <!-- Live preview -->
+    <div class="preview-section">
+      <div class="preview-head">
+        <span class="preview-title">Live Preview</span>
+        <span class="preview-status" id="pvStatus" aria-live="polite">detached</span>
+      </div>
+
+      <!-- Empty state -->
+      <div class="preview-empty-state" id="pvEmpty">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+        </svg>
+        <p>Paste a URL above, then click <strong>Preview</strong> to attach a live view of the target app.</p>
+      </div>
+
+      <!-- Live frame -->
+      <div id="pvFrame" style="display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0">
+        <!-- toolbar -->
+        <div class="preview-toolbar">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent)" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+          <span class="preview-domain" id="pvDomain">—</span>
+          <!-- Refresh -->
+          <button class="preview-action" onclick="refreshPv()" aria-label="Reload preview">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4.31"/>
+            </svg>
+          </button>
+          <!-- Open in tab -->
+          <button class="preview-action" onclick="openTab()" aria-label="Open in new tab">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+          </button>
+          <!-- Detach -->
+          <button class="preview-action" onclick="detachPv()" aria-label="Detach preview">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <!-- iframe -->
+        <div class="preview-frame-wrap" id="pvWrap">
+          <div class="preview-blocked" id="pvBlocked" style="display:none">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.25;color:var(--text-3)" aria-hidden="true">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+            <div>
+              <strong>Embed blocked</strong>
+              <p>This site uses <code style="color:var(--accent);font-size:11px">X-Frame-Options</code> to prevent embedding. Open it directly instead.</p>
+            </div>
+            <button class="btn-open-tab" onclick="openTab()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Open in new tab
+            </button>
+          </div>
+          <iframe
+            id="pvIframe"
+            class="preview-iframe"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+            referrerpolicy="no-referrer"
+            title="Live preview of target application"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+</div><!-- .layout -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   THEME SYSTEM  (§4 style-match, §6 semantic color tokens)
+   Persisted to localStorage, applied via data-theme on <html>
+═══════════════════════════════════════════════════════════ */
+const THEMES = ['linear-dark', 'linear-light', 'claude-dark', 'claude-light']
+let currentTheme = localStorage.getItem('sf2-theme') || 'linear-dark'
+
+function applyTheme(id) {
+  if (!THEMES.includes(id)) id = 'linear-dark'
+  currentTheme = id
+  document.documentElement.setAttribute('data-theme', id)
+  localStorage.setItem('sf2-theme', id)
+  THEMES.forEach(t => {
+    const tick = document.getElementById('tick-' + t)
+    const opt  = document.querySelector(`[data-t="${t}"]`)
+    if (tick) tick.style.visibility = t === id ? 'visible' : 'hidden'
+    if (opt)  opt.classList.toggle('active', t === id)
+  })
+}
+
+function setTheme(id) { applyTheme(id); closeThemeMenu() }
+
+function openThemeMenu() {
+  const menu = document.getElementById('themeMenu')
+  if (menu.classList.contains('open')) { closeThemeMenu(); return }
+  const btn = document.getElementById('btnTheme')
+  const r = btn.getBoundingClientRect()
+  menu.style.top   = (r.bottom + 6) + 'px'
+  menu.style.right = (window.innerWidth - r.right) + 'px'
+  menu.classList.add('open')
+  document.getElementById('btnTheme').setAttribute('aria-expanded', 'true')
+}
+
+function closeThemeMenu() {
+  document.getElementById('themeMenu').classList.remove('open')
+  document.getElementById('btnTheme').setAttribute('aria-expanded', 'false')
+}
+
+document.addEventListener('click', e => {
+  const menu = document.getElementById('themeMenu')
+  if (menu.classList.contains('open') &&
+      !menu.contains(e.target) &&
+      !document.getElementById('btnTheme').contains(e.target)) {
+    closeThemeMenu()
+  }
+})
+
+// Keyboard nav for theme menu (§9 keyboard-nav)
+document.getElementById('themeMenu').addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeThemeMenu()
+})
+
+applyTheme(currentTheme)
+
+
+/* ═══════════════════════════════════════════════════════════
+   URL INPUT + VALIDATION  (§8 inline-validation, §1 a11y)
+═══════════════════════════════════════════════════════════ */
+const URL_RE = /^https?:\/\/[^\s]+$/i
+
+function onUrlInput() {
+  const val  = document.getElementById('urlInput').value.trim()
+  const wrap = document.getElementById('urlWrap')
+  const dot  = document.getElementById('urlDot')
+  wrap.classList.remove('valid', 'invalid')
+  dot.classList.remove('v', 'e')
+  if (!val) return
+  if (URL_RE.test(val)) { wrap.classList.add('valid');   dot.classList.add('v') }
+  else                   { wrap.classList.add('invalid'); dot.classList.add('e') }
+}
+
+function getUrl()   { return document.getElementById('urlInput').value.trim() }
+function isUrlOk(u) { return URL_RE.test(u) }
+
+
+/* ═══════════════════════════════════════════════════════════
+   LIVE PREVIEW  (§8 progressive-disclosure, §2 feedback)
+═══════════════════════════════════════════════════════════ */
+let pvAttached = false
+let pvBlockedTimer = null
+
+function togglePreview() { pvAttached ? detachPv() : attachPv() }
+
+function attachPv() {
+  const url = getUrl()
+  if (!url || !isUrlOk(url)) {
+    // Shake the input bar (§8 error-feedback)
+    const w = document.getElementById('urlWrap')
+    w.style.transition = 'none'
+    w.style.transform = 'translateX(-4px)'
+    setTimeout(() => { w.style.transition = ''; w.style.transform = '' }, 120)
+    document.getElementById('urlInput').focus()
+    return
+  }
+
+  pvAttached = true
+  const empty = document.getElementById('pvEmpty')
+  const frame = document.getElementById('pvFrame')
+  const iframe = document.getElementById('pvIframe')
+  const blocked = document.getElementById('pvBlocked')
+  const domain = document.getElementById('pvDomain')
+  const btn = document.getElementById('btnAttach')
+  const status = document.getElementById('pvStatus')
+
+  empty.style.display  = 'none'
+  frame.style.display  = 'flex'
+  blocked.style.display = 'none'
+  iframe.style.display = 'block'
+
+  try { domain.textContent = new URL(url).hostname } catch { domain.textContent = url }
+
+  btn.classList.add('on')
+  btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Detach`
+
+  status.textContent = 'loading…'
+  status.style.color = 'var(--warn)'
+
+  iframe.src = url
+
+  // Detect blocked (§8 error-recovery)
+  clearTimeout(pvBlockedTimer)
+  pvBlockedTimer = setTimeout(() => {
+    try {
+      const d = iframe.contentDocument || iframe.contentWindow?.document
+      if (!d || d.URL === 'about:blank') showBlocked()
+      else { status.textContent = 'live'; status.style.color = 'var(--success)' }
+    } catch {
+      // Cross-origin — loaded fine
+      status.textContent = 'live'; status.style.color = 'var(--success)'
+    }
+  }, 3500)
+
+  iframe.onload = () => {
+    clearTimeout(pvBlockedTimer)
+    try {
+      const d = iframe.contentDocument || iframe.contentWindow?.document
+      if (!d || d.URL === 'about:blank') showBlocked()
+      else { status.textContent = 'live'; status.style.color = 'var(--success)' }
+    } catch {
+      status.textContent = 'live'; status.style.color = 'var(--success)'
+    }
+  }
+}
+
+function showBlocked() {
+  document.getElementById('pvBlocked').style.display = 'flex'
+  document.getElementById('pvIframe').style.display  = 'none'
+  const s = document.getElementById('pvStatus')
+  s.textContent = 'blocked'; s.style.color = 'var(--warn)'
+}
+
+function detachPv() {
+  pvAttached = false
+  clearTimeout(pvBlockedTimer)
+  const iframe = document.getElementById('pvIframe')
+  iframe.src = 'about:blank'; iframe.style.display = 'block'
+  document.getElementById('pvBlocked').style.display  = 'none'
+  document.getElementById('pvFrame').style.display    = 'none'
+  document.getElementById('pvEmpty').style.display    = 'flex'
+  const btn = document.getElementById('btnAttach')
+  btn.classList.remove('on')
+  btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview`
+  const s = document.getElementById('pvStatus')
+  s.textContent = 'detached'; s.style.color = 'var(--text-3)'
+}
+
+function refreshPv() {
+  const url = getUrl()
+  if (!url) return
+  document.getElementById('pvBlocked').style.display  = 'none'
+  document.getElementById('pvIframe').style.display   = 'block'
+  document.getElementById('pvIframe').src = url
+  const s = document.getElementById('pvStatus')
+  s.textContent = 'reloading…'; s.style.color = 'var(--warn)'
+}
+
+function openTab() {
+  const url = getUrl()
+  if (url) window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   PIPELINE PHASES
+═══════════════════════════════════════════════════════════ */
+const PHASES = [
+  { id: 'navigation',    label: 'Navigation' },
+  { id: 'classification', label: 'Classification' },
+  { id: 'table_analysis', label: 'Table Analysis' },
+  { id: 'interaction',   label: 'Interaction Analysis' },
+  { id: 'assembly',      label: 'Spec Assembly' },
+]
+const PHASE_IDX = Object.fromEntries(PHASES.map((p,i) => [p.id, i]))
+
+let phaseState  = PHASES.map(() => 'pending')  // pending|active|done|error
+let phaseCounts = PHASES.map(() => null)
+
+function phaseIcon(state) {
+  if (state === 'pending') return `<span class="pi-pending" aria-hidden="true"></span>`
+  if (state === 'active')  return `
+    <svg class="pi-running spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+    </svg>`
+  if (state === 'done') return `
+    <svg class="pi-done" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>`
+  if (state === 'error') return `
+    <svg class="pi-error" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>`
+  return ''
+}
+
+function renderPhases() {
+  const el = document.getElementById('phaseList')
+  el.innerHTML = PHASES.map((p, i) => {
+    const st  = phaseState[i]
+    const cnt = phaseCounts[i]
+    const cntHtml = cnt != null
+      ? `<span class="phase-count">${cnt}</span>`
+      : st === 'active'
+        ? `<span class="phase-running-label">running</span>`
+        : ''
+    return `
+      <div class="phase-row ${st}" role="listitem" aria-label="${p.label}: ${st}">
+        <div class="phase-indicator">${phaseIcon(st)}</div>
+        <span class="phase-name">${p.label}</span>
+        ${cntHtml}
+      </div>`
+  }).join('')
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS
+═══════════════════════════════════════════════════════════ */
+let pipelineStatus = 'idle'
+
+function setStatus(s) {
+  pipelineStatus = s
+  const pill = document.getElementById('statusPill')
+  const txt  = document.getElementById('statusText')
+  pill.className = 'status-pill ' + s
+  txt.textContent = s
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   EVENT LOG  (§8 progressive-disclosure, last 20 lines)
+═══════════════════════════════════════════════════════════ */
+const LOG_MAX = 20
+const logBuf  = []
+
+function addLog(type, msg) {
+  const ts = new Date().toTimeString().slice(0,8)
+  logBuf.push({ ts, type, msg })
+  if (logBuf.length > LOG_MAX) logBuf.shift()
+  const log = document.getElementById('eventLog')
+  log.innerHTML = logBuf.map(l => `
+    <div class="el-line">
+      <span class="el-ts">${l.ts}</span>
+      <span class="el-type ${l.type}">${l.type}</span>
+      <span class="el-msg">${esc(l.msg)}</span>
+    </div>`).join('')
+  log.scrollTop = log.scrollHeight
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SESSION STATS + ELAPSED TIMER
+═══════════════════════════════════════════════════════════ */
+let t0 = null, timerID = null
+let nScreens = 0, nTables = 0, nInteract = 0
+
+function startTimer() {
+  t0 = Date.now()
+  timerID = setInterval(() => {
+    const s  = Math.floor((Date.now() - t0) / 1000)
+    const mm = String(Math.floor(s/60)).padStart(2,'0')
+    const ss = String(s%60).padStart(2,'0')
+    const t  = mm + ':' + ss
+    document.getElementById('phaseTimer').textContent = t
+    document.getElementById('sElapsed').textContent   = t
+  }, 1000)
+}
+
+function stopTimer() { clearInterval(timerID) }
+
+function resetSession() {
+  nScreens = nTables = nInteract = 0
+  document.getElementById('sScreens').textContent = '—'
+  document.getElementById('sTables').textContent  = '—'
+  document.getElementById('sInteract').textContent= '—'
+  document.getElementById('sElapsed').textContent = '—'
+  document.getElementById('phaseTimer').textContent= ''
+}
+
+function bumpScreens(n) {
+  nScreens = n ?? nScreens + 1
+  document.getElementById('sScreens').textContent = nScreens
+}
+function bumpTables(n)  {
+  nTables = n ?? nTables + 1
+  document.getElementById('sTables').textContent = nTables
+}
+function bumpInteract(n) {
+  nInteract = n ?? nInteract + 1
+  document.getElementById('sInteract').textContent = nInteract
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   COST DISPLAY  (§10 number-formatting, tabular figures)
+═══════════════════════════════════════════════════════════ */
+function updateCosts(c) {
+  const total  = c.total_usd    || 0
+  const haiku  = c.haiku_usd    || 0
+  const sonnet = c.sonnet_usd   || 0
+  const opus   = c.opus_usd     || 0
+  const budget = c.budget_limit || 15
+
+  const f = v => '$' + v.toFixed(4)
+  const pct = t => total > 0 ? Math.min(100, (t/total)*100).toFixed(1) + '%' : '0%'
+  const budPct = Math.min(100, (total/budget)*100)
+
+  document.getElementById('liveCost').textContent  = f(total)
+  document.getElementById('costTotal').textContent = f(total)
+  document.getElementById('cHaiku').textContent   = f(haiku)
+  document.getElementById('cSonnet').textContent  = f(sonnet)
+  document.getElementById('cOpus').textContent    = f(opus)
+  document.getElementById('bHaiku').style.width   = pct(haiku)
+  document.getElementById('bSonnet').style.width  = pct(sonnet)
+  document.getElementById('bOpus').style.width    = pct(opus)
+  document.getElementById('budgetFill').style.width = budPct.toFixed(1) + '%'
+  document.getElementById('budgetPctLabel').innerHTML =
+    budPct.toFixed(1) + '% of <span id="budgetLimitLabel">$' + budget.toFixed(0) + '</span>'
+  document.getElementById('costBudgetPct').textContent   = budPct.toFixed(1) + '%'
+  document.getElementById('costBudgetLimit').textContent = '$' + budget.toFixed(2)
+  const bar = document.getElementById('budgetBar')
+  if (bar) bar.setAttribute('aria-valuenow', budPct.toFixed(0))
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SSE EVENT HANDLER
+═══════════════════════════════════════════════════════════ */
+function handleEvent(e) {
+  let d
+  try { d = JSON.parse(e.data) } catch { return }
+  const type = e.type || d.type || 'message'
+  if (d.cost) updateCosts(d.cost)
+
+  switch (type) {
+    case 'pipeline_start':
+      phaseState  = PHASES.map(() => 'pending')
+      phaseCounts = PHASES.map(() => null)
+      renderPhases()
+      addLog('phase_start', d.message || 'Pipeline started')
+      break
+
+    case 'phase_start': {
+      const i = PHASE_IDX[d.phase]
+      if (i != null) {
+        phaseState = phaseState.map((s, j) => j < i ? 'done' : j === i ? 'active' : s)
+        renderPhases()
+      }
+      addLog('phase_start', d.message || d.phase)
+      break
+    }
+
+    case 'phase_complete': {
+      const i = PHASE_IDX[d.phase]
+      if (i != null) {
+        phaseState[i] = 'done'
+        if (d.count != null) phaseCounts[i] = d.count
+        renderPhases()
+        if (d.phase === 'navigation')    bumpScreens(d.count)
+        if (d.phase === 'table_analysis') bumpTables(d.count)
+        if (d.phase === 'interaction')   bumpInteract(d.count)
+      }
+      addLog('phase_complete', d.message || d.phase + ' done')
+      break
+    }
+
+    case 'screen_discovered':
+      bumpScreens()
+      addLog('screen_found', d.url || d.message || 'screen discovered')
+      break
+
+    case 'duplicate_skipped':
+      addLog('duplicate_skip', d.url || 'duplicate skipped')
+      break
+
+    case 'pipeline_complete':
+      setStatus('complete')
+      phaseState = PHASES.map(() => 'done')
+      renderPhases()
+      stopTimer()
+      addLog('complete', d.message || 'Pipeline complete')
+      if (es) { es.close(); es = null }
+      enableControls(true)
+      loadRuns(); loadCosts()
+      break
+
+    case 'pipeline_error':
+    case 'budget_exceeded': {
+      const errIdx = type === 'pipeline_error'
+        ? phaseState.findIndex(s => s === 'active') : -1
+      if (errIdx >= 0) phaseState[errIdx] = 'error'
+      renderPhases()
+      setStatus('error')
+      stopTimer()
+      addLog('error', d.message || type)
+      if (es) { es.close(); es = null }
+      enableControls(true)
+      break
+    }
+
+    default:
+      if (d.message) addLog('message', d.message)
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   PIPELINE START / STOP  (§2 loading-buttons, §8 feedback)
+═══════════════════════════════════════════════════════════ */
+let es = null  // EventSource
+
+async function startPipeline() {
+  if (pipelineStatus === 'running') return
+  resetSession()
+  logBuf.length = 0
+
+  const url = getUrl()
+  try {
+    const body = {}
+    if (url && isUrlOk(url)) body.base_url = url
+    const res = await fetch('/api/pipeline/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }))
+      addLog('error', err.detail || 'Failed to start')
+      setStatus('error')
+      return
+    }
+  } catch(err) {
+    addLog('error', 'Cannot reach server — is specforge running? ' + err.message)
+    setStatus('error')
+    return
+  }
+
+  setStatus('running')
+  enableControls(false)
+  startTimer()
+
+  es = new EventSource('/api/pipeline/progress')
+  const evts = ['pipeline_start','phase_start','phase_complete','screen_discovered',
+                 'duplicate_skipped','cost_update','pipeline_complete','pipeline_error',
+                 'budget_exceeded','message']
+  evts.forEach(ev => es.addEventListener(ev, handleEvent))
+  es.onerror = () => {
+    if (pipelineStatus === 'running') {
+      setStatus('error'); stopTimer()
+      addLog('error', 'SSE connection lost'); enableControls(true)
+    }
+  }
+}
+
+async function stopPipeline() {
+  setStatus('stopping')
+  try {
+    await fetch('/api/pipeline/stop', { method: 'POST' })
+    addLog('phase_start', 'Stop signal sent')
+  } catch(e) {
+    addLog('error', 'Stop failed: ' + e.message)
+  }
+}
+
+function enableControls(idle) {
+  document.getElementById('btnRun').disabled  = !idle
+  document.getElementById('btnStop').disabled =  idle
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RUNS HISTORY
+═══════════════════════════════════════════════════════════ */
+async function loadRuns() {
+  try {
+    const res = await fetch('/api/runs')
+    if (!res.ok) return
+    renderRuns(await res.json())
+  } catch {}
+}
+
+function renderRuns(runs) {
+  const c = document.getElementById('runsContainer')
+  if (!runs?.length) {
+    c.innerHTML = `<div class="empty">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+      </svg>
+      <span>No runs yet</span></div>`
+    return
+  }
+  c.innerHTML = `
+    <table class="runs-tbl" aria-label="Run history">
+      <thead><tr>
+        <th scope="col">Run ID</th>
+        <th scope="col">ISO / Module</th>
+        <th scope="col" style="text-align:right">Cost</th>
+        <th scope="col">Spec</th>
+        <th scope="col"></th>
+      </tr></thead>
+      <tbody>${runs.map(r => `
+        <tr>
+          <td class="mono">${esc(r.run_id)}</td>
+          <td><span style="font-family:var(--mono);font-size:11.5px">${esc(r.iso||'—')} / ${esc(r.module||'—')}</span></td>
+          <td style="text-align:right;font-family:var(--mono);color:var(--accent)">${r.cost_usd != null ? '$'+Number(r.cost_usd).toFixed(4) : '—'}</td>
+          <td>${r.has_spec
+            ? '<span class="chip chip-spec">spec</span>'
+            : '<span class="chip chip-none">none</span>'}</td>
+          <td>${r.has_spec ? `<button class="btn-dl" onclick="dlSpec('${esc(r.run_id)}')" aria-label="Download spec for run ${esc(r.run_id)}">↓ JSON</button>` : ''}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`
+}
+
+async function dlSpec(runId) {
+  try {
+    const res = await fetch(`/api/runs/${encodeURIComponent(runId)}/spec`)
+    if (!res.ok) return
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = runId + '_spec.json'; a.click()
+    URL.revokeObjectURL(url)
+  } catch(e) { alert('Download failed: ' + e.message) }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   COSTS POLLING
+═══════════════════════════════════════════════════════════ */
+async function loadCosts() {
+  try {
+    const res = await fetch('/api/costs')
+    if (res.ok) updateCosts(await res.json())
+  } catch {}
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CONFIG PANEL
+═══════════════════════════════════════════════════════════ */
+async function loadConfig() {
+  try {
+    const res = await fetch('/api/config')
+    if (!res.ok) throw new Error()
+    const c = await res.json()
+    const rows = [
+      ['ISO',        c.iso        || '—'],
+      ['Module',     c.module     || '—'],
+      ['Base URL',   c.base_url   || '—'],
+      ['Budget',     c.max_budget ? '$' + c.max_budget : '—'],
+      ['Max screens',c.max_screens|| '—'],
+    ]
+    document.getElementById('cfgPanel').innerHTML =
+      rows.map(([k,v]) => `
+        <div class="cfg-row">
+          <span class="cfg-key">${esc(k)}</span>
+          <span class="cfg-val" title="${esc(String(v))}">${esc(String(v))}</span>
+        </div>`).join('')
+    // Pre-fill URL input if empty
+    const inp = document.getElementById('urlInput')
+    if (!inp.value && c.base_url) { inp.value = c.base_url; onUrlInput() }
+  } catch {
+    document.getElementById('cfgPanel').innerHTML =
+      `<p style="font-size:11.5px;color:var(--text-3)">Server offline — run <code style="color:var(--accent)">python -m specforge</code></p>`
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+renderPhases()
+loadConfig()
+loadRuns()
+loadCosts()
+
+// Background polling
+setInterval(() => { loadRuns(); loadCosts() }, 30_000)
+setInterval(() => { if (pipelineStatus === 'running') loadCosts() }, 3_000)
+</script>
+</body>
+</html>

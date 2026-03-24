@@ -1,6 +1,6 @@
 """Haiku-powered decision routing — central hub for all autonomous crawl decisions."""
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 from specforge.ai.prompt_manager import PromptManager
 from specforge.decisions.ambiguity_resolver import AmbiguityResolver
 from specforge.decisions.click_decider import ClickDecider, ClickDecision
@@ -14,7 +14,7 @@ class DecisionEngine:
 
     def __init__(
         self,
-        ai: AnthropicClient,
+        ai: GeminiClient,
         prompt_manager: PromptManager,
         config: dict,
     ):

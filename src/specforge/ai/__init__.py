@@ -1,1 +1,1 @@
-"""AI layer — Anthropic SDK wrapper, prompt management, image utilities."""
+"""AI layer — Gemini SDK wrapper, prompt management, image utilities."""

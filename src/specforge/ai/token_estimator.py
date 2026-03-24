@@ -3,7 +3,7 @@
 
 # Characters-per-token approximation (conservative)
 _CHARS_PER_TOKEN = 3.5
-# Approximate tokens consumed by a 500 KB image in the Anthropic vision API
+# Approximate tokens consumed by a 500 KB image in the Gemini vision API
 _IMAGE_TOKENS = 1600
 
 

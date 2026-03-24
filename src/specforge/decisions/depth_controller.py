@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 from specforge.ai.prompt_manager import PromptManager
 
 
@@ -19,7 +19,7 @@ class DepthController:
 
     def __init__(
         self,
-        ai: AnthropicClient,
+        ai: GeminiClient,
         prompt_manager: PromptManager,
         config: dict,
     ):

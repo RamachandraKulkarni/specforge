@@ -1,4 +1,4 @@
-"""Screenshot processing: resize, base64 encode, prepare for Anthropic vision API."""
+"""Screenshot processing: resize, base64 encode, prepare for Gemini vision API."""
 
 import base64
 import io
@@ -28,7 +28,7 @@ def to_base64(image_bytes: bytes) -> str:
 
 
 def load_screenshot(path: str | Path, max_size_kb: int = 500) -> dict:
-    """Load a screenshot file, resize if needed, return dict for Anthropic vision."""
+    """Load a screenshot file, resize if needed, return dict for Gemini vision."""
     data = Path(path).read_bytes()
     data = resize_if_needed(data, max_size_kb)
     return {
@@ -40,7 +40,7 @@ def load_screenshot(path: str | Path, max_size_kb: int = 500) -> dict:
 def screenshot_bytes_to_vision(
     image_bytes: bytes, max_size_kb: int = 500
 ) -> dict:
-    """Convert raw screenshot bytes to Anthropic vision input dict."""
+    """Convert raw screenshot bytes to Gemini vision input dict."""
     data = resize_if_needed(image_bytes, max_size_kb)
     return {
         "base64": to_base64(data),

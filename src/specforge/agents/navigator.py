@@ -11,7 +11,7 @@ from pathlib import Path
 
 from playwright.async_api import async_playwright
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 from specforge.ai.image_utils import screenshot_bytes_to_vision
 from specforge.ai.prompt_manager import PromptManager
 from specforge.crawler.checkpoint import Checkpoint
@@ -123,7 +123,7 @@ class Navigator:
 
     def __init__(
         self,
-        ai: AnthropicClient,
+        ai: GeminiClient,
         prompt_manager: PromptManager,
         config: dict,
         output_dir: Path,
@@ -369,7 +369,7 @@ class Navigator:
         )
 
         result = await self.ai.call_with_vision(
-            model="claude-haiku-4-5-20251001",
+            model="gemini-3.1-flash-lite-preview",
             system=_PAGE_SYSTEM,
             text=prompt,
             images=[img],

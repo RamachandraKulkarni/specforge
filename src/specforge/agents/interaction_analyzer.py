@@ -3,7 +3,7 @@
 import asyncio
 from itertools import islice
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 from specforge.ai.image_utils import screenshot_bytes_to_vision
 from specforge.ai.prompt_manager import PromptManager
 
@@ -29,7 +29,7 @@ class InteractionAnalyzer:
 
     def __init__(
         self,
-        ai: AnthropicClient,
+        ai: GeminiClient,
         prompt_manager: PromptManager,
         config: dict,
     ):
@@ -92,7 +92,7 @@ class InteractionAnalyzer:
 
         if images:
             result = await self.ai.call_with_vision(
-                "claude-sonnet-4-20250514", self.SYSTEM_PROMPT, prompt, images, max_tokens=3000
+                "gemini-3-flash-preview", self.SYSTEM_PROMPT, prompt, images, max_tokens=3000
             )
         else:
             result = await self.ai.sonnet(self.SYSTEM_PROMPT, prompt, max_tokens=3000)

@@ -14,7 +14,7 @@ from specforge.agents.navigator import Navigator
 from specforge.agents.spec_assembler import SpecAssembler
 from specforge.agents.table_analyzer import TableAnalyzer
 from specforge.agents.interaction_analyzer import InteractionAnalyzer
-from specforge.ai.anthropic_client import AnthropicClient, BudgetExceededError
+from specforge.ai.gemini_client import GeminiClient, BudgetExceededError
 from specforge.ai.prompt_manager import PromptManager
 from specforge.assembler.validator import SpecValidator
 
@@ -100,16 +100,16 @@ class Pipeline:
     def __init__(self, config: dict, progress_callback=None):
         self.config = config
         self.emit = progress_callback or (lambda event, data: None)
-        self.ai: AnthropicClient | None = None
+        self.ai: GeminiClient | None = None
         self.run_id: str = ""
         self.output_dir: Path = Path("./output")
 
     async def run(self) -> dict:
-        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        api_key = os.getenv("GEMINI_API_KEY", "")
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY is not set in .env")
+            raise ValueError("GEMINI_API_KEY is not set in .env")
 
-        self.ai = AnthropicClient(api_key, self.config.get("ai", {}))
+        self.ai = GeminiClient(api_key, self.config.get("ai", {}))
         pm = PromptManager()
 
         # Require a URL — must come from the dashboard input
@@ -244,7 +244,7 @@ class Pipeline:
 
             return final_spec
 
-        except BudgetExceededError as e:
+        except BudgetExceededError as                                                                                                                                                      e:
             self.emit("budget_exceeded", {"error": str(e)})
             raise
 
@@ -258,7 +258,7 @@ class Pipeline:
         screen_list = "\n".join(
             f"  {s['id']} | {s['url']} | {s.get('page_type','?')} | "
             f"{s.get('module_name','?')} | {s.get('description','')}"
-            for s in screens[:80]  # cap at 80 to stay within context
+            for s in screens[:80]  # cap at 80 to stay within context                                                                        
         )
 
         all_tables = self._extract_tables(nav_map)

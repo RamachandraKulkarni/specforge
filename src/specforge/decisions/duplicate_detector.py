@@ -3,7 +3,7 @@
 import hashlib
 from dataclasses import dataclass, field
 
-from specforge.ai.anthropic_client import AnthropicClient
+from specforge.ai.gemini_client import GeminiClient
 from specforge.ai.image_utils import screenshot_bytes_to_vision
 from specforge.ai.prompt_manager import PromptManager
 
@@ -23,7 +23,7 @@ class DuplicateDetector:
 
     def __init__(
         self,
-        ai: AnthropicClient,
+        ai: GeminiClient,
         prompt_manager: PromptManager,
         config: dict,
     ):
@@ -109,7 +109,7 @@ class DuplicateDetector:
 
         if images:
             result = await self.ai.call_with_vision(
-                "claude-haiku-4-5-20251001", system, prompt, images, max_tokens=300
+                "gemini-3.1-flash-lite-preview", system, prompt, images, max_tokens=300
             )
         else:
             result = await self.ai.haiku(system, prompt, max_tokens=300)
