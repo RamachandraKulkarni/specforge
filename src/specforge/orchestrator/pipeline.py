@@ -14,7 +14,8 @@ from specforge.agents.navigator import Navigator
 from specforge.agents.spec_assembler import SpecAssembler
 from specforge.agents.table_analyzer import TableAnalyzer
 from specforge.agents.interaction_analyzer import InteractionAnalyzer
-from specforge.ai.gemini_client import GeminiClient, BudgetExceededError
+from specforge.ai.gemini_client import GeminiClient, BudgetExceededError as GeminiBudgetError
+from specforge.ai.anthropic_client import AnthropicClient, BudgetExceededError as AnthropicBudgetError
 from specforge.ai.prompt_manager import PromptManager
 from specforge.assembler.validator import SpecValidator
 
@@ -100,16 +101,25 @@ class Pipeline:
     def __init__(self, config: dict, progress_callback=None):
         self.config = config
         self.emit = progress_callback or (lambda event, data: None)
-        self.ai: GeminiClient | None = None
+        self.ai = None
         self.run_id: str = ""
         self.output_dir: Path = Path("./output")
 
     async def run(self) -> dict:
-        api_key = os.getenv("GEMINI_API_KEY", "")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY is not set in .env")
+        provider = self.config.get("ai", {}).get("provider", "google")
+        if provider == "google":
+            api_key = os.getenv("GEMINI_API_KEY", "")
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY is not set in .env")
+            self.ai = GeminiClient(api_key, self.config.get("ai", {}))
+        elif provider == "anthropic":
+            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+            if not api_key:
+                raise ValueError("ANTHROPIC_API_KEY is not set in .env")
+            self.ai = AnthropicClient(api_key, self.config.get("ai", {}))
+        else:
+            raise ValueError(f"Unknown AI provider: {provider}")
 
-        self.ai = GeminiClient(api_key, self.config.get("ai", {}))
         pm = PromptManager()
 
         # Require a URL — must come from the dashboard input
@@ -244,7 +254,7 @@ class Pipeline:
 
             return final_spec
 
-        except BudgetExceededError as                                                                                                                                                      e:
+        except (AnthropicBudgetError, GeminiBudgetError) as e:
             self.emit("budget_exceeded", {"error": str(e)})
             raise
 
@@ -345,3 +355,4 @@ class Pipeline:
         if self.config.get("output", {}).get("save_intermediate", True):
             path = self.output_dir / filename
             path.write_text(json.dumps(data, indent=2, default=str))
+

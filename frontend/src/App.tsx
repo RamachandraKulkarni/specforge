@@ -45,6 +45,8 @@ export default function App() {
   const urlValid = URL_RE.test(targetUrl)
   const urlState = targetUrl === '' ? '' : urlValid ? 'valid' : 'invalid'
 
+  const [aiProvider, setAiProvider] = useState('google')
+
   /* ── Credentials (natural language, Haiku parses it) ─ */
   const [credentials, setCredentials] = useState('')
 
@@ -199,9 +201,11 @@ export default function App() {
     if (status === 'running') return
     resetSession()
 
-    const body: Record<string, string> = {}
+    const body: Record<string, any> = {}
     if (targetUrl && urlValid) body.base_url = targetUrl
     if (credentials.trim())   body.credentials = credentials.trim()
+    
+    body.config_override = { ai: { provider: aiProvider } }
 
     try {
       const res = await fetch('/api/pipeline/start', {
@@ -298,6 +302,8 @@ export default function App() {
         status={status}
         previewAttached={previewAttached}
         onTogglePreview={() => setPreviewAttached(v => !v)}
+        aiProvider={aiProvider}
+        onAiProviderChange={setAiProvider}
       />
       <Sidebar
         config={config}

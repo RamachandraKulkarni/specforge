@@ -101,7 +101,13 @@ async def start_pipeline(req: StartRequest, background_tasks: BackgroundTasks):
 
     config = _load_config()
     if req.config_override:
-        config.update(req.config_override)
+        def deep_update(d, u):
+            for k, v in u.items():
+                if isinstance(v, dict) and k in d and isinstance(d[k], dict):
+                    deep_update(d[k], v)
+                else:
+                    d[k] = v
+        deep_update(config, req.config_override)
     if req.base_url:
         config.setdefault("target", {})["base_url"] = req.base_url
 

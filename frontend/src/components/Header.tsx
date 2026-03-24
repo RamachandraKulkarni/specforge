@@ -17,12 +17,15 @@ interface Props {
   status: PipelineStatus
   previewAttached: boolean
   onTogglePreview: () => void
+  aiProvider: string
+  onAiProviderChange: (v: string) => void
 }
 
 export default function Header({
   theme, onThemeChange,
   targetUrl, urlState, onUrlChange,
   status, previewAttached, onTogglePreview,
+  aiProvider, onAiProviderChange,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
@@ -120,7 +123,25 @@ export default function Header({
         </div>
 
         {/* Right cluster */}
-        <div className="hdr-right">
+        <div className="hdr-right">            <select
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-1)',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                marginRight: '8px',
+                fontSize: '12px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+              value={aiProvider}
+              onChange={e => onAiProviderChange(e.target.value)}
+              aria-label="Select AI Provider"
+            >
+              <option value="google">Google</option>
+              <option value="anthropic">Anthropic</option>
+            </select>
           <div className={`status-pill ${status}`} role="status" aria-live="polite">
             <span className="status-dot" aria-hidden="true" />
             <span>{status}</span>
