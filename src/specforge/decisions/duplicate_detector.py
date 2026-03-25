@@ -32,8 +32,15 @@ class DuplicateDetector:
         self.config = config
 
     def _dom_hash(self, screen: dict) -> str:
-        dom = screen.get("dom_structure", screen.get("url", ""))
-        return hashlib.md5(str(dom).encode()).hexdigest()
+        # Use actual button/tab text — NOT just counts — so same-URL SPA states
+        # with different loaded content (e.g. nomination page before/after "Go")
+        # are hashed differently and won't be incorrectly treated as duplicates.
+        dom_sum = screen.get("dom_summary", {})
+        btn_texts = "|".join((b.get("text") or "")[:20] for b in dom_sum.get("buttons", [])[:15])
+        tab_texts = "|".join((t.get("text") or "")[:20] for t in dom_sum.get("tabs", [])[:10])
+        table_count = str(screen.get("table_count", 0))
+        unique_state = f"{screen.get('url', '')}::{btn_texts}::{tab_texts}::{table_count}"
+        return hashlib.md5(unique_state.encode()).hexdigest()
 
     def _compute_dom_similarity(self, new_screen: dict, existing_screens) -> tuple[float, dict | None]:
         new_hash = self._dom_hash(new_screen)
@@ -109,7 +116,7 @@ class DuplicateDetector:
 
         if images:
             result = await self.ai.call_with_vision(
-                "gemini-3.1-flash-lite-preview", system, prompt, images, max_tokens=300
+                self.config["ai"]["models"]["decision"], system, prompt, images, max_tokens=300
             )
         else:
             result = await self.ai.haiku(system, prompt, max_tokens=300)

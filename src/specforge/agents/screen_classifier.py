@@ -57,7 +57,7 @@ class ScreenClassifier:
                 self.config.get("extraction", {}).get("screenshot", {}).get("max_size_kb", 500),
             )
             result = await self.ai.call_with_vision(
-                "gemini-3.1-flash-lite-preview", self.SYSTEM_PROMPT, prompt, [img], max_tokens=1000
+                self.config["ai"]["models"]["decision"], self.SYSTEM_PROMPT, prompt, [img], max_tokens=1000
             )
         else:
             result = await self.ai.haiku(self.SYSTEM_PROMPT, prompt, max_tokens=1000)

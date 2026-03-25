@@ -15,11 +15,12 @@ interface Props {
   previewAttached: boolean
   onAttach: () => void
   onDetach: () => void
+  liveFrame?: string | null
 }
 
 type PvStatus = 'detached' | 'loading' | 'live' | 'blocked'
 
-export default function RightPanel({ usage, targetUrl, previewAttached, onAttach: _onAttach, onDetach }: Props) {
+export default function RightPanel({ usage, targetUrl, previewAttached, onAttach: _onAttach, onDetach, liveFrame }: Props) {
   const tokenPct = (t: number) => usage.total_tokens > 0 ? Math.min(100, (t / usage.total_tokens) * 100).toFixed(1) + '%' : '0%'
   const callPct  = (c: number) => usage.total_calls  > 0 ? Math.min(100, (c / usage.total_calls)  * 100).toFixed(1) + '%' : '0%'
 
@@ -190,35 +191,41 @@ export default function RightPanel({ usage, targetUrl, previewAttached, onAttach
 
             {/* Frame area */}
             <div className="preview-frame-wrap">
-              {pvStatus === 'blocked' && (
-                <div className="preview-blocked">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-                    style={{ opacity: .25, color: 'var(--text-3)' }} aria-hidden="true">
-                    <rect x="2" y="3" width="20" height="14" rx="2"/>
-                    <path d="M8 21h8M12 17v4"/>
-                  </svg>
-                  <div>
-                    <strong>Embed blocked</strong>
-                    <p>This site uses <code style={{ color: 'var(--accent)', fontSize: 11 }}>X-Frame-Options</code> to prevent embedding. Open it directly instead.</p>
-                  </div>
-                  <button className="btn-open-tab" onClick={openTab}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                      <polyline points="15 3 21 3 21 9"/>
-                      <line x1="10" y1="14" x2="21" y2="3"/>
-                    </svg>
-                    Open in new tab
-                  </button>
-                </div>
+              {liveFrame ? (
+                <img src={liveFrame} alt="Live Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'var(--bg)' }} />
+              ) : (
+                <>
+                  {pvStatus === 'blocked' && (
+                    <div className="preview-blocked">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                        style={{ opacity: .25, color: 'var(--text-3)' }} aria-hidden="true">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                      </svg>
+                      <div>
+                        <strong>Embed blocked</strong>
+                        <p>This site uses <code style={{ color: 'var(--accent)', fontSize: 11 }}>X-Frame-Options</code> to prevent embedding. Open it directly instead.</p>
+                      </div>
+                      <button className="btn-open-tab" onClick={openTab}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                          <polyline points="15 3 21 3 21 9"/>
+                          <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                        Open in new tab
+                      </button>
+                    </div>
+                  )}
+                  <iframe
+                    ref={iframeRef}
+                    className="preview-iframe"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+                    referrerPolicy="no-referrer"
+                    title="Live preview of target application"
+                    style={{ display: pvStatus === 'blocked' ? 'none' : 'block' }}
+                  />
+                </>
               )}
-              <iframe
-                ref={iframeRef}
-                className="preview-iframe"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-                referrerPolicy="no-referrer"
-                title="Live preview of target application"
-                style={{ display: pvStatus === 'blocked' ? 'none' : 'block' }}
-              />
             </div>
           </div>
         )}

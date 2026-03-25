@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import type { PipelineStatus, Phase, LogEntry, Usage, Run } from '../types'
 
 function fmtTokens(n: number): string {
@@ -25,6 +26,12 @@ export default function MainPanel({
 }: Props) {
   const running  = status === 'running'
   const stopping = status === 'stopping'
+
+  const logEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logs.length])
 
   return (
     <main className="main" aria-label="Pipeline control">
@@ -104,6 +111,7 @@ export default function MainPanel({
               <span className="el-msg">{l.msg}</span>
             </div>
           ))}
+          <div ref={logEndRef} />
         </div>
       </div>
 

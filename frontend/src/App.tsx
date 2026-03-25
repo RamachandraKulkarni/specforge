@@ -45,7 +45,7 @@ export default function App() {
   const urlValid = URL_RE.test(targetUrl)
   const urlState = targetUrl === '' ? '' : urlValid ? 'valid' : 'invalid'
 
-  const [aiProvider, setAiProvider] = useState('google')
+  const [aiProvider, setAiProvider] = useState('anthropic')
 
   /* ── Credentials (natural language, Haiku parses it) ─ */
   const [credentials, setCredentials] = useState('')
@@ -64,6 +64,7 @@ export default function App() {
   const [tables, setTables] = useState<number | null>(null)
   const [interactions, setInteractions] = useState<number | null>(null)
   const [elapsed, setElapsed] = useState<string | null>(null)
+  const [liveFrame, setLiveFrame] = useState<string | null>(null)
 
   /* ── Timer ───────────────────────────────────────────── */
   const t0Ref = useRef<number | null>(null)
@@ -118,16 +119,21 @@ export default function App() {
     setTables(null)
     setInteractions(null)
     setElapsed(null)
+    setLiveFrame(null)
     setPhaseTimer('')
     setUsage(INITIAL_USAGE)
   }, [])
 
   /* ── SSE event handler ───────────────────────────────── */
   const handleSSEEvent = useCallback((e: MessageEvent) => {
-    let d: SSEEventData
+    let d: any
     try { d = JSON.parse(e.data) } catch { return }
     const type = e.type || d.type || 'message'
+    
+    // Some events might pass usage as a nested object, or the whole payload for usage_update
     if (d.usage) updateUsage(d.usage)
+    if (type === 'usage_update') updateUsage(d)
+
     switch (type) {
       case 'pipeline_start':
         setPhases(INITIAL_PHASES.map(p => ({ ...p })))
@@ -176,6 +182,10 @@ export default function App() {
         addLog('complete', d.message ?? 'Pipeline complete')
         if (esRef.current) { esRef.current.close(); esRef.current = null }
         loadRuns()
+        break
+
+      case 'preview_frame':
+        if (d.frame) setLiveFrame(d.frame)
         break
 
       case 'pipeline_error':
@@ -232,13 +242,18 @@ export default function App() {
     esRef.current = es
     const evts = ['pipeline_start','phase_start','phase_complete','screen_discovered',
                   'duplicate_skipped','usage_update','pipeline_complete','pipeline_error',
-                  'budget_exceeded','message']
+                  'budget_exceeded','message','preview_frame']
     evts.forEach(ev => es.addEventListener(ev, handleSSEEvent as EventListener))
+
     es.onerror = () => {
-      if (status === 'running') {
-        setStatus('error'); stopTimer()
-        addLog('error', 'SSE connection lost')
-      }
+      setStatus(prev => {
+        if (prev === 'running') {
+          stopTimer()
+          addLog('error', 'SSE connection lost')
+          return 'error'
+        }
+        return prev
+      })
     }
   }, [status, targetUrl, urlValid, resetSession, startTimer, stopTimer, addLog, handleSSEEvent])
 
@@ -333,6 +348,7 @@ export default function App() {
         previewAttached={previewAttached}
         onAttach={() => setPreviewAttached(true)}
         onDetach={() => setPreviewAttached(false)}
+        liveFrame={liveFrame}
       />
     </div>
   )

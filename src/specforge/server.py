@@ -78,6 +78,11 @@ async def _run_pipeline(config: dict, tracker: ProgressTracker):
             "cost": _state["cost_summary"].get("total_usd", 0),
         })
         log.info("pipeline_complete", run_id=pipeline.run_id)
+    except asyncio.CancelledError:
+        _state["status"] = "idle"
+        _state["error"] = "Pipeline cancelled"
+        tracker.emit("pipeline_error", {"error": "Pipeline manually stopped. API calls aborted."})
+        log.info("pipeline_cancelled")
     except Exception as e:
         _state["status"] = "error"
         _state["error"] = str(e)
@@ -125,18 +130,27 @@ async def start_pipeline(req: StartRequest, background_tasks: BackgroundTasks):
     _state["error"] = None
     _state["progress"] = None
 
-    background_tasks.add_task(_run_pipeline, config, _tracker)
+    _pipeline_task = asyncio.create_task(_run_pipeline(config, _tracker))
     log.info("pipeline_started")
     return {"status": "started", "run_id": _state.get("run_id")}
 
 
 @app.post("/api/pipeline/stop")
 async def stop_pipeline():
-    global _state
+    global _state, _pipeline_task
     if _state["status"] != "running":
         raise HTTPException(status_code=409, detail="Pipeline is not running")
+    
     _state["status"] = "stopping"
-    return {"status": "stopping"}
+    
+    if _pipeline_task and not _pipeline_task.done():
+        _pipeline_task.cancel()
+        
+    _state["status"] = "idle"
+    if _tracker:
+        _tracker.emit("pipeline_error", {"error": "Pipeline manually stopped by user. API calls aborted."})
+        
+    return {"status": "stopped"}
 
 
 @app.get("/api/pipeline/status")

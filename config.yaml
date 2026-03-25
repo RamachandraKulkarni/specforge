@@ -5,16 +5,16 @@ target:
     login_url: ""     # Haiku auto-detects the login page — leave blank
 
 ai:
-  provider: "google" # Switch to "anthropic" to use Claude models
+  provider: "anthropic" # Switch to "anthropic" to use Claude models
   models:
     # Google defaults
-    decision: "gemini-2.5-flash"
-    analyzer:  "gemini-2.5-pro"
-    assembler: "gemini-2.5-pro"
+    # decision: "gemini-2.5-flash"
+    # analyzer:  "gemini-2.5-pro"
+    # assembler: "gemini-2.5-pro"
     # Anthropic defaults (unused unless provider is "anthropic")
-    # decision: "claude-haiku-4-5-20251001"
-    # analyzer:  "claude-sonnet-4-6"
-    # assembler: "claude-opus-4-6"
+    decision: "claude-haiku-4-5-20251001"   # vision + fast decisions (navigator, dup-detect, depth)
+    analyzer:  "claude-sonnet-4-6"           # structure analysis + orchestration
+    assembler: "claude-opus-4-6"             # final spec assembly
   concurrency:
     flash_parallel: 2
     pro_parallel: 1

@@ -68,7 +68,7 @@ class TableAnalyzer:
         if screenshot_bytes:
             img = screenshot_bytes_to_vision(screenshot_bytes)
             result = await self.ai.call_with_vision(
-                "gemini-3.1-flash-lite-preview", self.SYSTEM_PROMPT, prompt, [img], max_tokens=2000
+                self.config["ai"]["models"]["decision"], self.SYSTEM_PROMPT, prompt, [img], max_tokens=2000
             )
         else:
             result = await self.ai.haiku(self.SYSTEM_PROMPT, prompt, max_tokens=2000)

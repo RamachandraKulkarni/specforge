@@ -28,6 +28,7 @@ class ScraplingEngine:
                 headless=True,
                 disable_resources=False,
                 network_idle=True,
+                ignore_https_errors=True,
             )
         return self._fetcher
 

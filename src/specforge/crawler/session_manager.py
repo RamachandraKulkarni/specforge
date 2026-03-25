@@ -176,7 +176,7 @@ class SessionManager:
             screenshot = await page.screenshot()
             img = screenshot_bytes_to_vision(screenshot, max_size_kb=300)
             check = await self.ai.call_with_vision(
-                model="gemini-3.1-flash-lite-preview",
+                model=self.config["ai"]["models"]["decision"],
                 system="You analyze web pages. Respond with JSON only.",
                 text='Is this page a login/sign-in wall that blocks access without credentials? Respond: {"requires_login": true/false}',
                 images=[img],
@@ -198,7 +198,7 @@ class SessionManager:
         # Step 2: Ask Haiku to identify the form
         prompt = _ANALYZE_PROMPT.format(elements=json.dumps(elements, indent=2))
         result = await self.ai.call_with_vision(
-            model="gemini-3.1-flash-lite-preview",
+            model=self.config["ai"]["models"]["decision"],
             system=_ANALYZE_SYSTEM,
             text=prompt,
             images=[img],
@@ -255,7 +255,7 @@ class SessionManager:
         img_after = screenshot_bytes_to_vision(screenshot_after, max_size_kb=500)
 
         verify_result = await self.ai.call_with_vision(
-            model="gemini-3.1-flash-lite-preview",
+            model=self.config["ai"]["models"]["decision"],
             system=_VERIFY_SYSTEM,
             text=_VERIFY_PROMPT,
             images=[img_after],

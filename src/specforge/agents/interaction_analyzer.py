@@ -92,7 +92,7 @@ class InteractionAnalyzer:
 
         if images:
             result = await self.ai.call_with_vision(
-                "gemini-3-flash-preview", self.SYSTEM_PROMPT, prompt, images, max_tokens=3000
+                self.config["ai"]["models"]["analyzer"], self.SYSTEM_PROMPT, prompt, images, max_tokens=3000
             )
         else:
             result = await self.ai.sonnet(self.SYSTEM_PROMPT, prompt, max_tokens=3000)

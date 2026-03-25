@@ -58,6 +58,7 @@ export interface SSEEventData {
   phase?: string
   message?: string
   url?: string
+  frame?: string
   count?: number
   usage?: SSEUsagePayload
 }
